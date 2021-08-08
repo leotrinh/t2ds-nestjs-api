@@ -1,0 +1,63 @@
+version: "3.9"
+services:
+  aidictvn_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aidictvn_backend
+    depends_on:
+      - aidictvn_mongodb
+      - aidictvn_postgres
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./src/:/app/src/
+      - ./test/:/app/test/
+      - ./e2e/:/app/e2e/
+    ports:
+      - 3000:3000
+    networks:
+      - app-network
+
+  aidictvn_mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    container_name: aidictvn_mongodb
+    environment:
+      MONGO_INITDB_DATABASE: aidictvn
+    ports:
+      - 27017:27017
+    volumes:
+      - database-data:/data/db
+      - ./initdb/:/docker-entrypoint-initdb.d/
+    networks:
+      - app-network
+
+  aidictvn_postgres:
+    image: i386/postgres:latest
+    container_name: aidictvn_postgres
+    environment: 
+      POSTGRES_USER: aidictvn
+      POSTGRES_PASSWORD: aidictvn2021
+      POSTGRES_DB: aidictvn
+    ports:
+      - 5432:5432
+    networks:
+      - app-network
+      
+  aidictvn_pgadmin:
+    container_name: pg_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: aidictvn@mail.com
+      PGADMIN_DEFAULT_PASSWORD: aidictvn2021
+    ports:
+      - "5050:80"
+      
+networks:
+  app-network:
+      driver: bridge
+
+volumes:
+    database-data:
+        driver: local
